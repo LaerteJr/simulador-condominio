@@ -159,9 +159,12 @@ function calculate() {
   const output = document.getElementById('output');
   const validation = document.getElementById('validation');
   if (!Number.isFinite(budget) || budget <= 0 || !Number.isInteger(unit) || unit < 1 || unit > 125 || !fractions[unit]) {
-    output.innerHTML = '<div class="note">Informe um orçamento maior que zero e um número de sobrado inteiro entre 1 e 125.</div>';
+    output.style.display = 'none'; // Oculta a área de resultados sem destruí-la
+    validation.textContent = 'Informe um orçamento maior que zero e um número de sobrado válido entre 1 e 125.';
     return;
   }
+  
+  output.style.display = 'block'; // Mostra a área de resultados novamente quando válido
   const oldValue = budget * fractions[unit] / fractionSum;
   const coeff = unit >= 27 && unit <= 86 ? coefficientA : coefficientB;
   const newValue = budget * coeff / coefficientSum;
