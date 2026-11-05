@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador de condomínio — Residencial Renoir</title>
+<title>Simulador de custos da nova convenção</title>
 <style>
 :root {
   color-scheme: light dark;
@@ -100,4 +100,200 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
     <p>Simule a contribuição pela nova proposta de convenção e compare com o critério de frações ideais. Modifique os valores para simular orçamentos mais eficientes.</p>
   </header>
   <main>
-    <section class="panel" aria-
+    <section class="panel" aria-labelledby="calc-title">
+      <h2 id="calc-title">Faça sua simulação</h2>
+      <p class="sub">O cálculo soma a portaria e as demais despesas para definir o Orçamento Base, que é rateado, adicionando depois 10% de Fundo de Reserva e o custo fixo Administrativo.</p>
+      
+      <div class="fields">
+        <div>
+          <label for="portaria">Custo da Portaria (R$)</label>
+          <input id="portaria" type="number" min="0" step="0.01" value="34857.37" inputmode="decimal">
+          <div class="hint">Simule opções mais em conta.</div>
+        </div>
+        <div>
+          <label for="outras">Demais Despesas (R$)</label>
+          <input id="outras" type="number" min="0" step="0.01" value="18558.60" inputmode="decimal">
+          <div class="hint">Restante do orçamento base.</div>
+        </div>
+        <div>
+          <label for="unit">Número do sobrado</label>
+          <input id="unit" type="number" min="1" max="125" step="1" value="68" inputmode="numeric">
+          <div class="hint">Digite de 1 a 125.</div>
+        </div>
+      </div>
+
+      <div id="output" aria-live="polite">
+        <div class="result">
+          <div class="result-top">
+            <div>
+              <small>BOLETO ESTIMADO (NOVA PROPOSTA)</small>
+              <div class="amount" id="newTotalAmount">R$ 0,00</div>
+            </div>
+            <div class="tag" id="groupTag">Buscando...</div>
+          </div>
+          
+          <div class="breakdown">
+            <div class="breakdown-row"><span>Orçamento Base Total Rateado</span> <strong id="totalBudgetText">R$ 0,00</strong></div>
+            <div class="breakdown-divider"></div>
+            <div class="breakdown-row"><span>Taxa de Condomínio (Rateio base)</span> <strong id="newBaseAmount">R$ 0,00</strong></div>
+            <div class="breakdown-row"><span>Fundo de Reserva (10%)</span> <strong id="newFundoAmount">R$ 0,00</strong></div>
+            <div class="breakdown-row"><span>Taxas Administrativas (Fixo)</span> <strong>R$ 22,74</strong></div>
+          </div>
+        </div>
+
+        <div class="terceirizado-box">
+          <div class="terceirizado-header">
+            <span>Custo da Portaria no Orçamento</span>
+            <strong id="terceirizadoTotal">R$ 0,00 / mês</strong>
+          </div>
+          <div class="terceirizado-bar"><div class="terceirizado-fill" id="terceirizadoFill" style="width: 0%;"></div></div>
+          <div class="terceirizado-desc">
+            Nesta simulação, a portaria representa <span id="terceirizadoPercentTxt">0%</span> das despesas base do condomínio. Pela nova convenção, sua unidade destinará <strong id="terceirizadoShare">R$ 0,00</strong> por mês apenas para pagar este serviço.
+          </div>
+        </div>
+
+        <div class="comparison">
+          <div class="metric"><span>Boleto com regra antiga</span><strong id="oldTotalAmount">R$ 0,00</strong></div>
+          <div class="metric"><span>Diferença no boleto</span><strong id="difference" class="positive">+ R$ 0,00</strong></div>
+          <div class="metric"><span>Variação</span><strong id="percent" class="positive">+0,00%</strong></div>
+        </div>
+      </div>
+
+      <div class="note" id="validation"></div>
+    </section>
+
+    <section class="details">
+      <details>
+        <summary>Como o cálculo final é feito?</summary>
+        <div class="detail-body">
+          <ul>
+            <li><b>Orçamento Base:</b> É a soma automática da "Portaria" com as "Demais Despesas".</li>
+            <li><b>Taxa de Condomínio:</b> Orçamento base rateado pelos coeficientes da nova proposta (0,011513333 para internas; 0,004756923 para externas).</li>
+            <li><b>Fundo de Reserva:</b> Acréscimo estatutário de 10% sobre a Taxa de Condomínio.</li>
+            <li><b>Administrativas:</b> Valor fixo de R$ 22,74 adicionado ao final da cota.</li>
+            <li><b>Boleto Antigo:</b> Simulou a mesma soma (Taxa + 10% + 22,74) mas usando a Fração Ideal original do imóvel transcrita da convenção de 1997.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Quais são os coeficientes da nova proposta?</summary>
+        <div class="detail-body">Unidades 27 a 86: 0,011513333 por unidade. Unidades 1 a 26 e 87 a 125: 0,004756923 por unidade.</div>
+      </details>
+    </section>
+    <p class="footer">Valores estimados · Residencial Renoir</p>
+  </main>
+</div>
+
+<script>
+const groups = [
+  {fraction:0.0122698, units:[1,26,97,115]},
+  {fraction:0.0074779, units:[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,29,30,31,32,33,34,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,63,64,65,66,67,68,69,70,73,74,75,76,77,78,85,86,107,108,109,110,111,112,113]},
+  {fraction:0.0074493, units:[35,36,39,40,57,58,61,62,79,80,83,84]},
+  {fraction:0.0074436, units:[37,38,59,60,81,82]},
+  {fraction:0.0074442, units:[50]},
+  {fraction:0.0074817, units:[71]},
+  {fraction:0.0074417, units:[72]},
+  {fraction:0.0075795, units:[87,88,90,92]},
+  {fraction:0.0100730, units:[89]},
+  {fraction:0.0112801, units:[91]},
+  {fraction:0.0099733, units:[93,94,95]},
+  {fraction:0.0100235, units:[96]},
+  {fraction:0.0074944, units:[98,101,102,104,106]},
+  {fraction:0.0098888, units:[99]},
+  {fraction:0.0100603, units:[100]},
+  {fraction:0.0104396, units:[103,105,114]},
+  {fraction:0.0100228, units:[116,117,120,122,124]},
+  {fraction:0.0101232, units:[118]},
+  {fraction:0.0076138, units:[119,121,123,125]}
+];
+
+const fractions = {};
+for (const group of groups) for (const unit of group.units) fractions[unit] = group.fraction;
+const fractionSum = Object.values(fractions).reduce((a,b)=>a+b,0);
+
+const coefficientA = 0.011513333;
+const coefficientB = 0.004756923;
+const coefficientSum = 60*coefficientA + 65*coefficientB;
+const taxaAdministrativa = 22.74;
+
+const money = value => value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const signedMoney = value => (value >= 0 ? '+ ' : '− ') + money(Math.abs(value));
+
+function calculate() {
+  const portariaInput = Number(document.getElementById('portaria').value);
+  const outrasInput = Number(document.getElementById('outras').value);
+  const unit = Number(document.getElementById('unit').value);
+  const output = document.getElementById('output');
+  const validation = document.getElementById('validation');
+
+  if (!Number.isFinite(portariaInput) || !Number.isFinite(outrasInput) || portariaInput < 0 || outrasInput < 0 || !Number.isInteger(unit) || unit < 1 || unit > 125 || !fractions[unit]) {
+    output.style.display = 'none';
+    validation.textContent = 'Informe valores válidos nos orçamentos e um número de sobrado entre 1 e 125.';
+    return;
+  }
+  
+  const budget = portariaInput + outrasInput;
+  if (budget <= 0) {
+    output.style.display = 'none';
+    validation.textContent = 'O Orçamento Base total deve ser maior que zero.';
+    return;
+  }
+  
+  output.style.display = 'block';
+
+  // Regra Nova
+  const isInternal = unit >= 27 && unit <= 86;
+  const coeff = isInternal ? coefficientA : coefficientB;
+  const newBase = budget * coeff / coefficientSum;
+  const newFundo = newBase * 0.10;
+  const newTotal = newBase + newFundo + taxaAdministrativa;
+
+  // Regra Antiga
+  const oldBase = budget * fractions[unit] / fractionSum;
+  const oldFundo = oldBase * 0.10;
+  const oldTotal = oldBase + oldFundo + taxaAdministrativa;
+
+  // Comparações
+  const difference = newTotal - oldTotal;
+  const percent = (newTotal / oldTotal - 1) * 100;
+
+  // Atualização da UI (Boleto Novo)
+  document.getElementById('totalBudgetText').textContent = money(budget);
+  document.getElementById('newTotalAmount').textContent = money(newTotal);
+  document.getElementById('newBaseAmount').textContent = money(newBase);
+  document.getElementById('newFundoAmount').textContent = money(newFundo);
+  
+  // Atualização da UI (Comparação e Boleto Antigo)
+  document.getElementById('oldTotalAmount').textContent = money(oldTotal);
+  
+  const diff = document.getElementById('difference');
+  diff.textContent = signedMoney(difference);
+  diff.className = difference > 0.005 ? 'positive' : difference < -0.005 ? 'negative' : '';
+  
+  const pct = document.getElementById('percent');
+  pct.textContent = (percent >= 0 ? '+' : '−') + Math.abs(percent).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
+  pct.className = percent > 0.005 ? 'positive' : percent < -0.005 ? 'negative' : '';
+  
+  document.getElementById('groupTag').textContent = isInternal ? 'Grupo 27–86 (Internas)' : 'Demais unidades (Frente)';
+
+  // Cálculos do painel de Portaria
+  let proporcaoPortaria = portariaInput / budget;
+  if (proporcaoPortaria > 1) proporcaoPortaria = 1; 
+  
+  const userSharePortaria = newBase * proporcaoPortaria;
+  
+  document.getElementById('terceirizadoTotal').textContent = money(portariaInput) + ' / mês';
+  document.getElementById('terceirizadoShare').textContent = money(userSharePortaria);
+  document.getElementById('terceirizadoFill').style.width = (proporcaoPortaria * 100) + '%';
+  document.getElementById('terceirizadoPercentTxt').textContent = Math.round(proporcaoPortaria * 100) + '%';
+
+  validation.textContent = 'Fração ideal original utilizada para base de comparação: ' + fractions[unit].toFixed(7).replace('.',',') + '.';
+}
+
+document.getElementById('portaria').addEventListener('input', calculate);
+document.getElementById('outras').addEventListener('input', calculate);
+document.getElementById('unit').addEventListener('input', calculate);
+calculate();
+</script>
+</body>
+</html>
