@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador de condomínio — Residencial Renoir</title>
+<title>Simulador de custos da nova convenção</title>
 <style>
 :root {
   color-scheme: light dark;
@@ -49,6 +49,10 @@ input:focus { border-color: var(--site-primary); box-shadow: 0 0 0 3px color-mix
 .amount { font-size: clamp(30px, 6vw, 42px); font-weight: 800; letter-spacing: -.045em; margin-top: 3px; font-variant-numeric: tabular-nums; }
 .tag { border: 1px solid color-mix(in srgb, var(--site-on-secondary) 24%, transparent); border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 750; }
 
+.breakdown { margin-top: 18px; padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--site-on-secondary) 15%, transparent); display: grid; gap: 6px; font-size: 13px; opacity: 0.9; }
+.breakdown-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.breakdown-row strong { font-variant-numeric: tabular-nums; }
+
 .comparison { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
 .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px; min-width: 0; }
 .metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 5px; }
@@ -56,7 +60,6 @@ input:focus { border-color: var(--site-primary); box-shadow: 0 0 0 3px color-mix
 .positive { color: var(--bad); }
 .negative { color: var(--good); }
 
-/* Novo painel da Portaria / Terceirizados */
 .terceirizado-box { margin-top: 14px; border: 1px solid var(--terceirizado); background: color-mix(in srgb, var(--terceirizado) 8%, transparent); border-radius: 12px; padding: 16px; }
 .terceirizado-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
 .terceirizado-header span { font-weight: 700; color: var(--text); }
@@ -96,13 +99,13 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
   <main>
     <section class="panel" aria-labelledby="calc-title">
       <h2 id="calc-title">Faça sua simulação</h2>
-      <p class="sub">O cálculo considera as despesas ordinárias do condomínio e os coeficientes indicados no artigo 25 da minuta.</p>
+      <p class="sub">O cálculo considera as despesas ordinárias rateadas, mais 10% de Fundo de Reserva e o custo fixo Administrativo.</p>
       
       <div class="fields">
         <div>
-          <label for="budget">Orçamento mensal total (R$)</label>
+          <label for="budget">Orçamento base ordinário (R$)</label>
           <input id="budget" type="number" min="0.01" step="0.01" value="53415.97" inputmode="decimal">
-          <div class="hint">Exemplo atualizado com a última prestação de contas.</div>
+          <div class="hint">Somatório das despesas (Ex: prestação anterior).</div>
         </div>
         <div>
           <label for="unit">Número do sobrado (1 a 125)</label>
@@ -115,10 +118,16 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
         <div class="result">
           <div class="result-top">
             <div>
-              <small>ESTIMATIVA PELA NOVA PROPOSTA</small>
-              <div class="amount" id="newAmount">R$ 0,00</div>
+              <small>BOLETO ESTIMADO (NOVA PROPOSTA)</small>
+              <div class="amount" id="newTotalAmount">R$ 0,00</div>
             </div>
             <div class="tag" id="groupTag">Buscando...</div>
+          </div>
+          
+          <div class="breakdown">
+            <div class="breakdown-row"><span>Taxa de Condomínio (Rateio base)</span> <strong id="newBaseAmount">R$ 0,00</strong></div>
+            <div class="breakdown-row"><span>Fundo de Reserva (10%)</span> <strong id="newFundoAmount">R$ 0,00</strong></div>
+            <div class="breakdown-row"><span>Taxas Administrativas (Fixo)</span> <strong>R$ 22,74</strong></div>
           </div>
         </div>
 
@@ -129,13 +138,13 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
           </div>
           <div class="terceirizado-bar"><div class="terceirizado-fill" id="terceirizadoFill" style="width: 65%;"></div></div>
           <div class="terceirizado-desc">
-            Baseado na prestação de contas mais recente, a portaria representa <span id="terceirizadoPercentTxt">65%</span> das despesas. Na nova convenção, a sua cota mensal destinará <strong id="terceirizadoShare">R$ 0,00</strong> apenas para pagar este serviço.
+            Baseado na prestação de contas mais recente, a portaria representa <span id="terceirizadoPercentTxt">65%</span> das despesas base. Pela nova convenção, sua unidade destinará <strong id="terceirizadoShare">R$ 0,00</strong> por mês apenas para pagar este serviço.
           </div>
         </div>
 
         <div class="comparison">
-          <div class="metric"><span>Critério antigo (fração ideal)</span><strong id="oldAmount">R$ 0,00</strong></div>
-          <div class="metric"><span>Diferença mensal</span><strong id="difference" class="positive">+ R$ 0,00</strong></div>
+          <div class="metric"><span>Boleto com regra antiga</span><strong id="oldTotalAmount">R$ 0,00</strong></div>
+          <div class="metric"><span>Diferença no boleto</span><strong id="difference" class="positive">+ R$ 0,00</strong></div>
           <div class="metric"><span>Variação</span><strong id="percent" class="positive">+0,00%</strong></div>
         </div>
       </div>
@@ -145,17 +154,18 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
 
     <section class="details">
       <details>
-        <summary>Como o cálculo é feito?</summary>
+        <summary>Como o cálculo final é feito?</summary>
         <div class="detail-body">
           <ul>
-            <li><b>Nova proposta:</b> unidades 27 a 86 usam o coeficiente 0,011513333; as demais usam 0,004756923. Os coeficientes são normalizados pela soma dos dois grupos para fechar o orçamento informado.</li>
-            <li><b>Critério antigo:</b> orçamento multiplicado pela fração ideal individual da unidade.</li>
-            <li>O cálculo da portaria extrai o valor fixo de R$ 34.857,37 do orçamento informado para mostrar a proporção de impacto na cota simulada.</li>
+            <li><b>Taxa de Condomínio:</b> Orçamento base rateado pelos coeficientes da nova proposta (0,011513333 para internas; 0,004756923 para externas).</li>
+            <li><b>Fundo de Reserva:</b> Acréscimo estatutário de 10% sobre a Taxa de Condomínio da unidade.</li>
+            <li><b>Administrativas:</b> Valor fixo de R$ 22,74 adicionado ao final da cota.</li>
+            <li><b>Boleto Antigo:</b> Simulou a mesma soma (Taxa + 10% + 22,74) mas usando a Fração Ideal original do imóvel transcrita da convenção de 1997.</li>
           </ul>
         </div>
       </details>
       <details>
-        <summary>Quais são os coeficientes da proposta?</summary>
+        <summary>Quais são os coeficientes da nova proposta?</summary>
         <div class="detail-body">Unidades 27 a 86: 0,011513333 por unidade. Unidades 1 a 26 e 87 a 125: 0,004756923 por unidade.</div>
       </details>
     </section>
@@ -193,7 +203,8 @@ const fractionSum = Object.values(fractions).reduce((a,b)=>a+b,0);
 const coefficientA = 0.011513333;
 const coefficientB = 0.004756923;
 const coefficientSum = 60*coefficientA + 65*coefficientB;
-const custoPortaria = 34857.37; // Custo do pessoal terceirizado extraído da prestação de contas
+const custoPortaria = 34857.37;
+const taxaAdministrativa = 22.74;
 
 const money = value => value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const signedMoney = value => (value >= 0 ? '+ ' : '− ') + money(Math.abs(value));
@@ -212,17 +223,29 @@ function calculate() {
   
   output.style.display = 'block';
 
-  // Cálculos principais
-  const oldValue = budget * fractions[unit] / fractionSum;
+  // Regra Nova
   const isInternal = unit >= 27 && unit <= 86;
   const coeff = isInternal ? coefficientA : coefficientB;
-  const newValue = budget * coeff / coefficientSum;
-  const difference = newValue - oldValue;
-  const percent = (newValue / oldValue - 1) * 100;
+  const newBase = budget * coeff / coefficientSum;
+  const newFundo = newBase * 0.10;
+  const newTotal = newBase + newFundo + taxaAdministrativa;
 
-  // Atualização dos valores na tela
-  document.getElementById('newAmount').textContent = money(newValue);
-  document.getElementById('oldAmount').textContent = money(oldValue);
+  // Regra Antiga
+  const oldBase = budget * fractions[unit] / fractionSum;
+  const oldFundo = oldBase * 0.10;
+  const oldTotal = oldBase + oldFundo + taxaAdministrativa;
+
+  // Comparações
+  const difference = newTotal - oldTotal;
+  const percent = (newTotal / oldTotal - 1) * 100;
+
+  // Atualização da UI (Boleto Novo)
+  document.getElementById('newTotalAmount').textContent = money(newTotal);
+  document.getElementById('newBaseAmount').textContent = money(newBase);
+  document.getElementById('newFundoAmount').textContent = money(newFundo);
+  
+  // Atualização da UI (Comparação e Boleto Antigo)
+  document.getElementById('oldTotalAmount').textContent = money(oldTotal);
   
   const diff = document.getElementById('difference');
   diff.textContent = signedMoney(difference);
@@ -234,16 +257,16 @@ function calculate() {
   
   document.getElementById('groupTag').textContent = isInternal ? 'Grupo 27–86 (Internas)' : 'Demais unidades (Frente)';
 
-  // Cálculos do painel de Portaria
+  // Cálculos do painel de Portaria (proporcional apenas sobre o rateio base)
   let proporcaoPortaria = custoPortaria / budget;
-  if (proporcaoPortaria > 1) proporcaoPortaria = 1; // Trava de segurança visual caso o usuário digite um orçamento muito baixo
+  if (proporcaoPortaria > 1) proporcaoPortaria = 1; 
   
-  const userSharePortaria = newValue * proporcaoPortaria;
+  const userSharePortaria = newBase * proporcaoPortaria;
   document.getElementById('terceirizadoShare').textContent = money(userSharePortaria);
   document.getElementById('terceirizadoFill').style.width = (proporcaoPortaria * 100) + '%';
   document.getElementById('terceirizadoPercentTxt').textContent = Math.round(proporcaoPortaria * 100) + '%';
 
-  validation.textContent = 'Fração ideal utilizada para a unidade ' + unit + ': ' + fractions[unit].toFixed(7).replace('.',',') + '. O custo de Pessoal Terceirizado foi extraído da última prestação de contas.';
+  validation.textContent = 'Fração ideal original utilizada para base de comparação: ' + fractions[unit].toFixed(7).replace('.',',') + '.';
 }
 
 document.getElementById('budget').addEventListener('input', calculate);
