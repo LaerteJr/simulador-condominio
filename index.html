@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de condomínio — Residencial Renoir</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --site-primary: #173F45;
+  --site-on-primary: #FFFFFF;
+  --site-secondary: #DCEBE6;
+  --site-on-secondary: #173F45;
+  --site-background: #F3F6F4;
+  --site-on-background: #182421;
+  --site-font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-font-heading: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  --surface: light-dark(#FFFFFF, #202A28);
+  --surface-soft: light-dark(#EDF3F0, #273431);
+  --text: light-dark(#182421, #F0F5F2);
+  --muted: light-dark(#61716B, #B3C1BA);
+  --border: light-dark(#D7E1DC, #42534D);
+  --good: light-dark(#176B49, #70D5A5);
+  --bad: light-dark(#A23E32, #FF9D8F);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
+#app { min-height: 100vh; width: 100%; background-color: var(--site-background); color: var(--site-on-background); border-radius: 0; }
+.hero { background: var(--site-primary); color: var(--site-on-primary); padding: calc(34px * var(--site-spacing-scale)) max(22px, calc((100vw - 920px) / 2)); }
+.eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; opacity: .78; }
+h1 { font-family: var(--site-font-heading); font-size: calc(32px * var(--site-heading-scale)); line-height: 1.12; margin: 10px 0 9px; letter-spacing: -.035em; }
+.hero p { max-width: 650px; margin: 0; color: #DCEBE6; line-height: 1.55; font-size: 14px; }
+main { max-width: 920px; margin: 0 auto; padding: calc(26px * var(--site-spacing-scale)) 20px 42px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: calc(18px * var(--site-radius-scale)); padding: calc(22px * var(--site-spacing-scale)); box-shadow: 0 8px 28px rgba(15,45,35,.055); }
+.panel h2 { font-size: 18px; margin: 0 0 5px; letter-spacing: -.02em; }
+.sub { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 0 20px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px; color: var(--muted); }
+input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; font: inherit; font-size: 16px; background: var(--surface); color: var(--text); outline: none; }
+input:focus { border-color: var(--site-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-primary) 16%, transparent); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.result { margin-top: 20px; background: var(--site-secondary); color: var(--site-on-secondary); border-radius: 14px; padding: 20px; }
+.result-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.result small { opacity: .75; font-weight: 700; }
+.amount { font-size: clamp(30px, 6vw, 42px); font-weight: 800; letter-spacing: -.045em; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.tag { border: 1px solid color-mix(in srgb, var(--site-on-secondary) 24%, transparent); border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 750; }
+.comparison { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px; min-width: 0; }
+.metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 5px; }
+.metric strong { display: block; font-size: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.positive { color: var(--bad); }
+.negative { color: var(--good); }
+.note { border-left: 3px solid #C18B3C; padding: 10px 13px; background: var(--surface-soft); color: var(--text); border-radius: 0 9px 9px 0; font-size: 12px; line-height: 1.55; margin-top: 18px; }
+.details { margin-top: 18px; }
+details { border-top: 1px solid var(--border); padding: 14px 0; }
+summary { cursor: pointer; font-weight: 750; font-size: 13px; }
+.detail-body { color: var(--muted); font-size: 12px; line-height: 1.65; padding-top: 10px; }
+.detail-body ul { padding-left: 18px; }
+.footer { color: var(--muted); font-size: 11px; line-height: 1.6; text-align: center; margin: 18px 8px 0; }
+@media (max-width: 580px) { .fields { grid-template-columns: 1fr; } .comparison { grid-template-columns: 1fr; } .hero { padding: 28px 22px; } h1 { font-size: calc(27px * var(--site-heading-scale)); } main { padding: 18px 12px 30px; } .panel { padding: 17px; } }
+@media (prefers-color-scheme: dark) { .hero p { color: #DCEBE6; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hero">
+    <div class="eyebrow">Residencial Renoir · Simulador independente</div>
+    <h1>Quanto ficaria o condomínio?</h1>
+    <p>Informe o orçamento mensal previsto e o número do seu sobrado para estimar a contribuição pela nova proposta de convenção — e comparar com o critério proporcional às frações ideais.</p>
+  </header>
+  <main>
+    <section class="panel" aria-labelledby="calc-title">
+      <h2 id="calc-title">Faça sua simulação</h2>
+      <p class="sub">O cálculo considera as despesas ordinárias do condomínio e os coeficientes indicados no artigo 25 da minuta.</p>
+      <div class="fields">
+        <div>
+          <label for="budget">Orçamento mensal total (R$)</label>
+          <input id="budget" type="number" min="0.01" step="0.01" value="53000" inputmode="decimal">
+          <div class="hint">Exemplo: 53000 para R$ 53.000,00</div>
+        </div>
+        <div>
+          <label for="unit">Número do sobrado (1 a 125)</label>
+          <input id="unit" type="number" min="1" max="125" step="1" value="68" inputmode="numeric">
+          <div class="hint">Digite apenas o número da unidade.</div>
+        </div>
+      </div>
+      <div id="output" aria-live="polite">
+        <div class="result">
+          <div class="result-top"><div><small>ESTIMATIVA PELA NOVA PROPOSTA</small><div class="amount" id="newAmount">R$ 610,21</div></div><div class="tag" id="groupTag">Grupo 27–86</div></div>
+        </div>
+        <div class="comparison">
+          <div class="metric"><span>Critério antigo (fração ideal)</span><strong id="oldAmount">R$ 396,33</strong></div>
+          <div class="metric"><span>Diferença mensal</span><strong id="difference" class="positive">+ R$ 213,88</strong></div>
+          <div class="metric"><span>Variação</span><strong id="percent" class="positive">+53,96%</strong></div>
+        </div>
+      </div>
+      <div class="note" id="validation">A unidade 115 aparece duas vezes na descrição de tipos da minuta. Para esta simulação, foi considerada a fração do tipo A (0,0122698), que faz a soma das 125 frações ficar praticamente igual a 1,00. Confirme esse dado com a administração.</div>
+    </section>
+    <section class="details">
+      <details>
+        <summary>Como o cálculo é feito?</summary>
+        <div class="detail-body">
+          <ul>
+            <li><b>Nova proposta:</b> unidades 27 a 86 usam o coeficiente 0,011513333; as demais usam 0,004756923. Os coeficientes são normalizados pela soma dos dois grupos para que o rateio feche exatamente o orçamento informado.</li>
+            <li><b>Critério antigo:</b> orçamento multiplicado pela fração ideal individual da unidade, dividida pela soma das frações das 125 unidades.</li>
+            <li>Os valores são estimativas para despesas ordinárias. Despesas extraordinárias, consumo individual, multas, juros e outras cobranças específicas não estão incluídos.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Quais são os coeficientes da proposta?</summary>
+        <div class="detail-body">Unidades 27 a 86: 0,011513333 por unidade. Unidades 1 a 26 e 87 a 125: 0,004756923 por unidade. A minuta indica que as despesas extraordinárias seriam divididas igualmente entre as 125 unidades; esse simulador não calcula essas despesas.</div>
+      </details>
+      <details>
+        <summary>Observação importante sobre esta simulação</summary>
+        <div class="detail-body">Ferramenta informativa, baseada nos números transcritos da minuta de convenção disponibilizada para análise. Não é boleto, previsão oficial do síndico ou parecer jurídico. A aprovação da convenção e o orçamento efetivamente aprovado podem alterar os valores. A fração ideal da unidade 115 precisa de confirmação por aparecer associada a dois tipos diferentes no documento.</div>
+      </details>
+    </section>
+    <p class="footer">Simulador comunitário não oficial · Residencial Renoir · Valores arredondados para centavos</p>
+  </main>
+</div>
+<script>
+const groups = [
+  {fraction:0.0122698, units:[1,26,97,115]},
+  {fraction:0.0074779, units:[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,29,30,31,32,33,34,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,63,64,65,66,67,68,69,70,73,74,75,76,77,78,85,86,107,108,109,110,111,112,113]},
+  {fraction:0.0074493, units:[35,36,39,40,57,58,61,62,79,80,83,84]},
+  {fraction:0.0074436, units:[37,38,59,60,81,82]},
+  {fraction:0.0074442, units:[50]},
+  {fraction:0.0074817, units:[71]},
+  {fraction:0.0074417, units:[72]},
+  {fraction:0.0075795, units:[87,88,90,92]},
+  {fraction:0.0100730, units:[89]},
+  {fraction:0.0112801, units:[91]},
+  {fraction:0.0099733, units:[93,94,95]},
+  {fraction:0.0100235, units:[96]},
+  {fraction:0.0074944, units:[98,101,102,104,106]},
+  {fraction:0.0098888, units:[99]},
+  {fraction:0.0100603, units:[100]},
+  {fraction:0.0104396, units:[103,105,114]},
+  {fraction:0.0100228, units:[116,117,120,122,124]},
+  {fraction:0.0101232, units:[118]},
+  {fraction:0.0076138, units:[119,121,123,125]}
+];
+const fractions = {};
+for (const group of groups) for (const unit of group.units) fractions[unit] = group.fraction;
+const fractionSum = Object.values(fractions).reduce((a,b)=>a+b,0);
+const coefficientA = 0.011513333;
+const coefficientB = 0.004756923;
+const coefficientSum = 60*coefficientA + 65*coefficientB;
+const money = value => value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const signedMoney = value => (value >= 0 ? '+ ' : '− ') + money(Math.abs(value));
+function calculate() {
+  const budget = Number(document.getElementById('budget').value);
+  const unit = Number(document.getElementById('unit').value);
+  const output = document.getElementById('output');
+  const validation = document.getElementById('validation');
+  if (!Number.isFinite(budget) || budget <= 0 || !Number.isInteger(unit) || unit < 1 || unit > 125 || !fractions[unit]) {
+    output.innerHTML = '<div class="note">Informe um orçamento maior que zero e um número de sobrado inteiro entre 1 e 125.</div>';
+    return;
+  }
+  const oldValue = budget * fractions[unit] / fractionSum;
+  const coeff = unit >= 27 && unit <= 86 ? coefficientA : coefficientB;
+  const newValue = budget * coeff / coefficientSum;
+  const difference = newValue - oldValue;
+  const percent = (newValue / oldValue - 1) * 100;
+  document.getElementById('newAmount').textContent = money(newValue);
+  document.getElementById('oldAmount').textContent = money(oldValue);
+  const diff = document.getElementById('difference');
+  diff.textContent = signedMoney(difference);
+  diff.className = difference > 0.005 ? 'positive' : difference < -0.005 ? 'negative' : '';
+  const pct = document.getElementById('percent');
+  pct.textContent = (percent >= 0 ? '+' : '−') + Math.abs(percent).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
+  pct.className = percent > 0.005 ? 'positive' : percent < -0.005 ? 'negative' : '';
+  document.getElementById('groupTag').textContent = unit >= 27 && unit <= 86 ? 'Grupo 27–86' : 'Demais unidades';
+  validation.textContent = 'Fração ideal utilizada para a unidade ' + unit + ': ' + fractions[unit].toFixed(7).replace('.',',') + '. A unidade 115 aparece duas vezes na descrição de tipos da minuta; para esta simulação, foi considerada a fração do tipo A (0,0122698), que faz a soma das 125 frações ficar praticamente igual a 1,00. Confirme esse dado com a administração.';
+}
+document.getElementById('budget').addEventListener('input', calculate);
+document.getElementById('unit').addEventListener('input', calculate);
+calculate();
+</script>
+</body>
+</html>
