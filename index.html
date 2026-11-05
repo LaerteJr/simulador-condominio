@@ -55,10 +55,11 @@ input:focus { border-color: var(--site-primary); box-shadow: 0 0 0 3px color-mix
 .breakdown-row strong { font-variant-numeric: tabular-nums; }
 .breakdown-divider { height: 1px; background: color-mix(in srgb, var(--site-on-secondary) 15%, transparent); margin: 6px 0; }
 
-.comparison { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.comparison { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
 .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px; min-width: 0; }
 .metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 5px; }
 .metric strong { display: block; font-size: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-highlight { border-left: 3px solid var(--terceirizado); }
 .positive { color: var(--bad); }
 .negative { color: var(--good); }
 
@@ -152,9 +153,22 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
         </div>
 
         <div class="comparison">
-          <div class="metric"><span>Boleto com regra antiga</span><strong id="oldTotalAmount">R$ 0,00</strong></div>
-          <div class="metric"><span>Diferença no boleto</span><strong id="difference" class="positive">+ R$ 0,00</strong></div>
-          <div class="metric"><span>Variação</span><strong id="percent" class="positive">+0,00%</strong></div>
+          <div class="metric">
+            <span>Boleto atual (Regra antiga real)</span>
+            <strong id="oldTotalAmount">R$ 0,00</strong>
+          </div>
+          <div class="metric metric-highlight">
+            <span>Regra antiga c/ simulação</span>
+            <strong id="oldOptimizedAmount">R$ 0,00</strong>
+          </div>
+          <div class="metric">
+            <span>Diferença (Nova Proposta vs Atual)</span>
+            <strong id="difference" class="positive">+ R$ 0,00</strong>
+          </div>
+          <div class="metric">
+            <span>Variação</span>
+            <strong id="percent" class="positive">+0,00%</strong>
+          </div>
         </div>
       </div>
 
@@ -167,10 +181,11 @@ summary { cursor: pointer; font-weight: 750; font-size: 13px; }
         <div class="detail-body">
           <ul>
             <li><b>Orçamento Base:</b> É a soma automática da "Portaria" com as "Demais Despesas".</li>
-            <li><b>Taxa de Condomínio:</b> Orçamento base simulado rateado pelos coeficientes da nova proposta.</li>
-            <li><b>Fundo de Reserva:</b> Acréscimo estatutário de 10% sobre a Taxa de Condomínio.</li>
+            <li><b>Taxa Nova Proposta:</b> Orçamento base simulado rateado pelos coeficientes da nova proposta.</li>
+            <li><b>Taxa Regra Antiga Simulada:</b> Mesmo orçamento base simulado, mas mantendo a fração ideal original do seu sobrado (mostra como a economia na portaria beneficiaria você sem mudar a convenção).</li>
+            <li><b>Fundo de Reserva:</b> Acréscimo estatutário de 10% sobre a Taxa de Condomínio simulada.</li>
             <li><b>Administrativas:</b> Valor fixo de R$ 22,74 adicionado ao final da cota.</li>
-            <li><b>Boleto Antigo:</b> Mantém o valor fixo baseado no orçamento base real da prestação de contas (R$ 53.415,97) para servir de base de comparação do cenário atual (status quo), independentemente das simulações de redução feitas acima.</li>
+            <li><b>Boleto Atual (Status Quo):</b> Mantém o valor fixo baseado no orçamento base real da última prestação de contas (R$ 53.415,97) para servir de ponto de partida fixo para comparações.</li>
           </ul>
         </div>
       </details>
@@ -255,7 +270,12 @@ function calculate() {
   const oldFundo = oldBase * 0.10;
   const oldTotal = oldBase + oldFundo + taxaAdministrativa;
 
-  // Comparações
+  // Regra Antiga Otimizada (Usa o orçamento simulado mas a fração antiga)
+  const oldOptimizedBase = budget * fractions[unit] / fractionSum;
+  const oldOptimizedFundo = oldOptimizedBase * 0.10;
+  const oldOptimizedTotal = oldOptimizedBase + oldOptimizedFundo + taxaAdministrativa;
+
+  // Comparações (Nova Proposta vs Boleto Atual)
   const difference = newTotal - oldTotal;
   const percent = (newTotal / oldTotal - 1) * 100;
 
@@ -265,8 +285,9 @@ function calculate() {
   document.getElementById('newBaseAmount').textContent = money(newBase);
   document.getElementById('newFundoAmount').textContent = money(newFundo);
   
-  // Atualização da UI (Comparação e Boleto Antigo)
+  // Atualização da UI (Comparação e Boletos Antigos)
   document.getElementById('oldTotalAmount').textContent = money(oldTotal);
+  document.getElementById('oldOptimizedAmount').textContent = money(oldOptimizedTotal);
   
   const diff = document.getElementById('difference');
   diff.textContent = signedMoney(difference);
@@ -289,7 +310,7 @@ function calculate() {
   document.getElementById('terceirizadoFill').style.width = (proporcaoPortaria * 100) + '%';
   document.getElementById('terceirizadoPercentTxt').textContent = Math.round(proporcaoPortaria * 100) + '%';
 
-  validation.textContent = 'Fração ideal original utilizada para base de comparação do cenário atual: ' + fractions[unit].toFixed(7).replace('.',',') + '.';
+  validation.textContent = 'Fração ideal original utilizada para os cálculos do cenário atual: ' + fractions[unit].toFixed(7).replace('.',',') + '.';
 }
 
 document.getElementById('portaria').addEventListener('input', calculate);
